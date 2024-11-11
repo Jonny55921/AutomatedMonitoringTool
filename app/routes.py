@@ -141,6 +141,7 @@ def check_security():
     url = data.get('url')
 
     if not url:
+<<<<<<< HEAD
         return jsonify({"error": "URL is required"}), 400
     
     ssl_check_result = check_ssl_cert(url)
@@ -155,3 +156,6 @@ def check_security():
     mongo.db.security_checks.insert_one(security_results)
 
     return jsonify(security_results)
+=======
+        return jsonify({"error": "URL is required"}), 400
+>>>>>>> backup-branch
