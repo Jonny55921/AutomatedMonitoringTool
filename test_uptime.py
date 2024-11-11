@@ -3,7 +3,7 @@ import json
 
 # Define the URL and data
 url = 'http://localhost:5000/check_uptime'
-data = {'url': 'https://www.nonexistentwebsite12345.com'}
+data = {'url': 'https://www.example.com'}
 
 # Send POST request
 response = requests.post(url, json=data)

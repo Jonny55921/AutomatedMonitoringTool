@@ -2,6 +2,8 @@ import requests
 from flask import Blueprint, jsonify, request
 from datetime import datetime
 from . import mongo
+import ssl
+import socket
 
 main = Blueprint('main', __name__)
 
@@ -84,3 +86,59 @@ def check_uptime():
         mongo.db.uptime_results.insert_one(result)
 
         return jsonify(result), 500  # 500 Internal Server Error
+
+def check_ssl_cert(url):
+    try:
+        hostname = url.replace("https://", "").replace("http://", "").split("/")[0]
+
+        context = ssl.create_default_context()
+        with socket.create_connection((hostname, 443),timeout=5) as sock:
+            with context.wrap_socket(sock,server_hostname=hostname) as ssock:
+                cert=ssock.getpeercert()
+        
+        expire_date_str = cert['notAfter']
+        expire_date = datetime.strptime(expire_date_str,'%b %d %H:%M:%S %Y %Z' )
+        current_date = datetime.utcnow()
+
+        is_valid = current_date < expire_date
+
+        return{
+            "url": url,
+            "ssl_valid": is_valid,
+            "expiry_date": expire_date_str,
+            "issuer": cert.get('issuer')
+        }
+    except Exception as e:
+        return{
+            "url": url,
+            "ssl_valid": False,
+            "error": str(e)
+        }
+    
+def check_version(url):
+    try:
+        response = requests.get(url,timeout=5)
+        headers = response.headers
+        server_info = headers.get("Server", "Unknown")
+        x_powered_by = headers.get("X-Powered-By", "Unknown")
+
+        return{
+            "url": url,
+            "server_info": server_info,
+            "x_powered_by": x_powered_by
+        }
+
+    except requests.exceptions.RequestException as e:
+        return{
+            "url": url,
+            "server_info": "Error",
+            "error": str(e)
+        }
+
+@main.route('/check_security', methods=['POST'])
+def check_security():
+    data = request.json()
+    url = data.get('url')
+
+    if not url:
+        return jsonify({"error": "URL is required"}), 400
