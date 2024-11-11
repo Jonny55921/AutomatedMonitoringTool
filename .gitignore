@@ -1,10 +1,20 @@
-# Activate environment with .\venv\Scripts\activate then flask run
-# Ignore Python cache files
+# Python files
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Ignore virtual environments
+# Virtualenvs
 venv/
 env/
-# For MacOS, you can ignore DS_Store files
+
+# .env files containing secrets
+.env
+
+# IDE configurations
+.vscode/
+.idea/
+
+# Operating system files
 .DS_Store
+Thumbs.db
