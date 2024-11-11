@@ -86,8 +86,8 @@ def check_uptime():
         mongo.db.uptime_results.insert_one(result)
 
         return jsonify(result), 500  # 500 Internal Server Error
-
-def check_ssl_cert(url):
+    
+def check_ssl_certificate(url):
     try:
         hostname = url.replace("https://", "").replace("http://", "").split("/")[0]
 
@@ -137,25 +137,40 @@ def check_version(url):
 
 @main.route('/check_security', methods=['POST'])
 def check_security():
-    data = request.json()
+    data = request.json
     url = data.get('url')
 
     if not url:
-<<<<<<< HEAD
         return jsonify({"error": "URL is required"}), 400
-    
-    ssl_check_result = check_ssl_cert(url)
-    software_check_result = check_version(url)
 
+    try:
+        # Run SSL certificate check
+        ssl_check_result = check_ssl_certificate(url)
+        print("SSL check result:", ssl_check_result)
+    except Exception as e:
+        print("Error during SSL check:", e)
+        return jsonify({"error": f"SSL check failed: {e}"}), 500
+
+    try:
+        # Run software version check
+        software_check_result = check_version(url)
+        print("Software check result:", software_check_result)
+    except Exception as e:
+        print("Error during software check:", e)
+        return jsonify({"error": f"Software version check failed: {e}"}), 500
+
+    # Combine results
     security_results = {
         "url": url,
         "ssl_check": ssl_check_result,
         "software_check": software_check_result
     }
 
-    mongo.db.security_checks.insert_one(security_results)
+    try:
+        # Save to MongoDB
+        mongo.db.security_checks.insert_one(security_results)
+    except Exception as e:
+        print("Error during MongoDB insert:", e)
+        return jsonify({"error": f"Failed to save results to database: {e}"}), 500
 
     return jsonify(security_results)
-=======
-        return jsonify({"error": "URL is required"}), 400
->>>>>>> backup-branch
